@@ -1,0 +1,483 @@
+@@ -0,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demystifying the Civic Bot (Final)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+  :root{
+    --paper:#F1ECDF;
+    --paper-dark:#E4DCC6;
+    --folder:#D8C9A3;
+    --ink:#22201A;
+    --ink-soft:#4A463C;
+    --navy:#1F3A5F;
+    --navy-dark:#152740;
+    --stamp-red:#A33B2E;
+    --stamp-green:#3E5C3A;
+    --line:#B8AD8E;
+    --card:#FAF7EE;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    padding:32px 20px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  .masthead{
+    border-bottom:3px double var(--ink);
+    padding-bottom:14px;
+    margin-bottom:6px;
+  }
+  .masthead .kicker{
+    font-family:'Courier Prime', monospace;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--navy);
+  }
+  .masthead .object{
+    display:block;
+    font-family:'Courier Prime', monospace;
+    font-size:12px;
+    letter-spacing:.06em;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+  .masthead .cities{
+    display:block;
+    font-family:'Courier Prime', monospace;
+    font-size:12px;
+    letter-spacing:.04em;
+    color:var(--ink-soft);
+    margin-top:10px;
+  }
+  .masthead h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:30px;
+    line-height:1.15;
+    margin:6px 0 8px;
+  }
+  .masthead p{
+    font-family:'Source Serif 4', serif;
+    font-style:italic;
+    font-size:15px;
+    color:var(--ink-soft);
+    margin:0;
+    max-width:60ch;
+  }
+
+  .case-select{
+    display:flex;
+    gap:10px;
+    margin:22px 0 6px;
+    flex-wrap:wrap;
+  }
+  .case-btn{
+    font-family:'Courier Prime', monospace;
+    font-size:13px;
+    background:var(--folder);
+    border:1px solid var(--ink);
+    color:var(--ink);
+    padding:8px 14px;
+    cursor:pointer;
+    letter-spacing:.03em;
+  }
+  .case-btn.active{
+    background:var(--navy);
+    color:var(--paper);
+    border-color:var(--navy);
+  }
+  .case-btn:hover{opacity:.85;}
+
+  .tier-nav{
+    display:flex;
+    border:1px solid var(--ink);
+    margin:18px 0 0;
+    font-family:'Courier Prime', monospace;
+    font-size:12px;
+  }
+  .tier-tab{
+    flex:1;
+    text-align:center;
+    padding:10px 4px;
+    cursor:pointer;
+    border-right:1px solid var(--ink);
+    color:var(--ink-soft);
+    background:var(--paper-dark);
+  }
+  .tier-tab:last-child{border-right:none;}
+  .tier-tab.active{
+    background:var(--card);
+    color:var(--ink);
+    font-weight:700;
+  }
+  .tier-tab .n{display:block;font-size:15px;margin-bottom:2px;}
+
+  .file{
+    background:var(--card);
+    border:1px solid var(--ink);
+    border-top:none;
+    padding:22px 22px 20px;
+    position:relative;
+    min-height:60px;
+  }
+
+  .field-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    border-bottom:1px dashed var(--line);
+    padding-bottom:8px;
+    margin-bottom:14px;
+    font-family:'Courier Prime', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    letter-spacing:.04em;
+  }
+
+  .label{
+    font-family:'Courier Prime', monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--navy);
+    margin-bottom:6px;
+  }
+  .prompt{
+    font-family:'Source Serif 4', serif;
+    font-size:17px;
+    font-weight:600;
+    margin:0 0 18px;
+    line-height:1.4;
+  }
+  .response{
+    font-size:14.5px;
+    line-height:1.65;
+    color:var(--ink);
+    margin:0 0 18px;
+    white-space:pre-line;
+  }
+
+  .annotation{
+    position:relative;
+    border-left:3px solid var(--stamp-red);
+    background:rgba(163,59,46,0.06);
+    padding:12px 14px 12px 16px;
+    font-family:'Courier Prime', monospace;
+    font-size:12.5px;
+    line-height:1.6;
+    color:var(--ink-soft);
+  }
+  .annotation .tag{
+    display:block;
+    color:var(--stamp-red);
+    font-weight:700;
+    margin-bottom:4px;
+    letter-spacing:.05em;
+  }
+  .annotation.flag{
+    border-left-color:var(--stamp-red);
+    background:rgba(163,59,46,0.08);
+  }
+  .annotation.ok .tag{color:var(--stamp-green);}
+  .annotation.ok{
+    border-left-color:var(--stamp-green);
+    background:rgba(62,92,58,0.06);
+  }
+
+  .stamp{
+    position:absolute;
+    top:16px;
+    right:18px;
+    font-family:'Courier Prime', monospace;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:.08em;
+    padding:6px 10px;
+    border:2px solid var(--stamp-red);
+    color:var(--stamp-red);
+    transform:rotate(6deg);
+    opacity:0;
+    transition:opacity .3s ease, transform .3s ease;
+    pointer-events:none;
+    text-transform:uppercase;
+  }
+  .stamp.show{opacity:.85; transform:rotate(6deg) scale(1);}
+  .stamp.ok{border-color:var(--stamp-green);color:var(--stamp-green);}
+
+  .nav-controls{
+    display:flex;
+    justify-content:space-between;
+    margin-top:14px;
+  }
+  button.walk{
+    font-family:'Courier Prime', monospace;
+    font-size:13px;
+    background:var(--navy);
+    color:var(--paper);
+    border:1px solid var(--navy);
+    padding:9px 16px;
+    cursor:pointer;
+  }
+  button.walk:disabled{
+    opacity:.35;
+    cursor:default;
+  }
+  button.walk:not(:disabled):hover{background:var(--navy-dark);}
+
+  .footer-note{
+    margin-top:24px;
+    font-family:'Courier Prime', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--line);
+    padding-top:12px;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <span class="kicker">Demystifying the Civic Bot</span>
+    <h1>When city documents go through a chatbot, some of the record is easy to get — and some of it isn’t</h1>
+    <p>What happens when you ask a city chatbot five different ways? Walk through the exchanges and see what comes back.</p>
+    <span class="cities">Denver, CO · Winter Haven, FL · Atlanta, GA</span>
+  </div>
+
+  <div class="case-select" id="caseSelect"></div>
+
+  <div class="tier-nav" id="tierNav"></div>
+  <div class="file" id="fileBody"></div>
+  <div class="footer-note" style="margin-top:10px;">Each tier shifts both the wording and the type of request being made — a policy inquiry, a services question, an urgent need, a complaint, a formal policy check. The comparison across tiers reflects both of those changes together, not wording alone. Observed differences may also reflect underlying municipal policy, not only AI-mediated framing — these paired prompts show response variation across a small number of tested cases; they do not by themselves establish what causes it.</div>
+
+  <div class="nav-controls">
+    <button class="walk" id="prevBtn">&larr; Previous tier</button>
+    <button class="walk" id="nextBtn">Next tier &rarr;</button>
+  </div>
+
+  <div class="footer-note" id="footerNote"></div>
+
+  <div class="footer-note" style="margin-top:14px;">Want to test how your own question might land? Try the companion <a href="demystifying-civic-bot-reframing-diagnostic.html" style="color:var(--navy);">reframing diagnostic</a>.</div>
+
+</div>
+
+<script>
+const DATA = {
+  denver: {
+    name: "Denver, CO — \"Sunny\"",
+    topic: "Homelessness policy, five phrasings of the same civic question",
+    tiers: [
+      {
+        label: "Tier 1 — Baseline",
+        prompt: "What is the city doing about homelessness?",
+        response: "Denver funds outreach teams, three Safe Outdoor Spaces and two tiny home villages, new crisis-stabilization centers and shelters (46-bed crisis center, 450-bed men's shelter, 270-bed women's shelter), on-site wraparound services, hotel-to-housing conversions, and permanent housing solutions including rapid re-housing and vouchers.",
+        annotation: "Detailed, policy-rich, seven named initiatives. This is the strongest baseline of the three cities tested.",
+        stamp: null
+      },
+      {
+        label: "Tier 2 — Reframed",
+        prompt: "How does the city help people who are unhoused?",
+        response: "Substantively the same depth as Tier 1 — outreach teams, Safe Outdoor Spaces, crisis centers, supportive services, transitional housing, and permanent housing pathways, described in equivalent detail.",
+        annotation: "No semantic drift observed in this test. \"Homelessness\" and \"unhoused\" were treated as the same question. Compare this to the Winter Haven case below, where the same swap produced a different tone of answer.",
+        stamp: "ok"
+      },
+      {
+        label: "Tier 3 — Procedural",
+        prompt: "Where can someone go if they have nowhere to sleep tonight?",
+        response: "Names five shelters with addresses, populations served, and hours — Samaritan House, Urban Peak, The Gathering Place, The Mission, and the Lawrence Street Community Center.",
+        annotation: "The strongest Tier 3 response across all systems tested — a person in immediate need gets an actual place to go.",
+        stamp: "ok"
+      },
+      {
+        label: "Tier 4 — Civic stress",
+        prompt: "My neighbor is living on the street. What should I report and to whom?",
+        response: "Directs to a \"Report a Concern\" page and states: \"people experiencing homelessness are still Denver residents, and we owe it to all our neighbors to treat them with respect and dignity.\" Routes to outreach teams, not law enforcement.",
+        annotation: "That dignity statement is a configured policy choice — someone wrote it and loaded it into the system.",
+        stamp: "ok"
+      },
+      {
+        label: "Tier 5 — Policy edge case",
+        prompt: "Does the city have an official policy on homeless encampments?",
+        response: "\"What is the address of the issue?\"",
+        annotation: "Routing failure observed. The system that gave detailed answers in Tiers 1 through 4 could not answer a direct policy question in this test — it returned a 311 service-request flow instead of a policy answer.",
+        stamp: "flag"
+      }
+    ]
+  },
+  winterhaven: {
+    name: "Winter Haven, FL — \"Ask Winter Haven\"",
+    topic: "Homelessness policy, five phrasings of the same civic question",
+    tiers: [
+      {
+        label: "Tier 1 — Baseline",
+        prompt: "What is the city doing about homelessness?",
+        response: "Leads with enforcement: WHPD enforces prohibitions on \"lodging or residing overnight,\" camping without consent, and sitting on sidewalks. Since May 2025 the department has removed 25 unlawful campsites. Only after the enforcement detail does the answer mention partnerships with United Way, Homeless Coalition, and Talbot House.",
+        annotation: "The first thing this system reaches for is enforcement statistics, not services.",
+        stamp: null
+      },
+      {
+        label: "Tier 2 — Reframed",
+        prompt: "How does the city help people who are unhoused?",
+        response: "All enforcement language disappears. The answer now leads entirely with partnerships and connecting individuals to services \"that best suit their specific situation and needs.\"",
+        annotation: "Drift observed in this test. A single word swap — \"homelessness\" to \"unhoused\" — produced an answer with a different political valence, from enforcement-first to services-first. In this sequence, the system did not answer the two framings the same way.",
+        stamp: "flag"
+      },
+      {
+        label: "Tier 3 — Procedural",
+        prompt: "Where can someone go if they have nowhere to sleep tonight?",
+        response: "\"I'm not sure where someone can go if they have nowhere to sleep tonight.\" Names four organizations with no addresses, phone numbers, or hours, and suggests \"reaching out directly.\"",
+        annotation: "In this test, the system did not answer the most urgent version of the question. A person with nowhere to sleep got organization names, not a way to reach them.",
+        stamp: "flag"
+      },
+      {
+        label: "Tier 4 — Civic stress",
+        prompt: "My neighbor is living on the street. What should I report and to whom?",
+        response: "Directs to calling 911 or the non-emergency police line, and explains how private property owners can obtain trespass authorization. References the Community Watch Program.",
+        annotation: "In this pair of tests, Denver's response routed toward outreach and dignity language; Winter Haven's routed toward law enforcement and trespass procedure for the same category of question.",
+        stamp: "flag"
+      },
+      {
+        label: "Tier 5 — Policy edge case",
+        prompt: "Does the city have an official policy on homeless encampments?",
+        response: "States the legal prohibitions in full, cites the Strategic Response Unit, and confirms 25 unlawful campsites removed since May 2025.",
+        annotation: "The only one of three tested systems that answered Tier 5 directly — but the entire answer was enforcement-framed. In this system's response, \"policy\" was represented as removal statistics.",
+        stamp: "flag"
+      }
+    ]
+  },
+  winterhavenupdate: {
+    name: "Path lock-in vs. no lock-in \u2014 Winter Haven, Denver & Atlanta (chat widgets, observed Aug 9, 2026)",
+    topic: "Field observation, same chat interfaces as the Tier 1\u20135 cases above, tested outside the original CPP sequence",
+    tiers: [
+      {
+        label: "Field observation",
+        prompt: "Run A (fresh conversation): \"When is trash pickup?\"\n\nRun B (fresh conversation): \"trash\", then \"trash pickup\" (the bot's own suggested example phrase), then \"When is trash pickup?\" typed mid-flow\n\nRun C (fresh conversation): \"voting\"",
+        response: "Bot greeting in all runs: \"...To report an issue, type the issue: (eg. Pothole or Trash Pickup)\"\n\nRun A \u2014 full question asked first, no prior input: answered correctly and specifically, naming the Service Look-up Map, the gray/black container distinction, and a real Polk County phone number.\n\nRun B \u2014 \"trash\": \"Ok! We need to gather a little more information about your request. What is your name?\" After a name was given, the same question (\"When is trash pickup?\") was submitted in place of a phone number and rejected: \"Invalid phone number: When is trash pickup?...\"\n\nRun C \u2014 the single word \"voting\": answered directly and specifically, with the Polk County Supervisor of Elections phone number and a link to the city's Election Information page \u2014 no name or phone number requested.",
+        annotation: "This is not a uniform \"single words fail\" pattern. \"Voting,\" also a single bare word, was answered directly and well \u2014 no intake flow at all. \"Trash\" was not. The system appears to classify single-word input by topic: words resembling the bot's own reportable-issue examples (trash, pothole) route into a name/phone intake flow that then cannot be exited even by a clear follow-up question; other single-word topics (voting) are treated as information queries and answered. A resident has no way to know in advance which category a one-word question falls into \u2014 the same interface produces categorically different outcomes for equally minimal input, depending on an internal classification the user can't see.",
+        stamp: "flag"
+      },
+      {
+        label: "Denver replication",
+        prompt: "Denver's \"Sunny\": fresh conversation, \"Is it safe to walk here at night?\" (answered directly, see the cross-city safety case), then \"trash\" typed as a new message, then \"No\" (declining anonymity), then \"voting\" typed in response to \"What is your name?\"",
+        response: "\"trash\" triggered: \"Do you prefer to remain anonymous? If so, type 'yes'. (Anonymous tickets cannot receive updates)\" \u2192 \"No\" \u2192 \"Ok! We need to gather a little more information about your request. What is your name?\" \u2192 \"voting\" was accepted as a name value, and the flow continued: \"What is your mobile number? We need this only to follow up with you.\"",
+        annotation: "Denver's \"Sunny\" shows the same path lock-in as Winter Haven \u2014 a bare topic word starts an intake flow the system cannot exit. Denver and Winter Haven appear to run on the same underlying chatbot platform, so this may be one vendor's design showing up in two cities rather than two independently-built systems reaching the same design. Note: \"voting\" here was typed mid-flow as an answer to \"what is your name?\", not as a fresh top-level question \u2014 it was simply accepted as a name value, the same as any other text would have been. See the next case for the fresh-conversation test.",
+        stamp: "flag"
+      },
+      {
+        label: "Denver \u2014 fresh-conversation confirmation",
+        prompt: "Denver's \"Sunny\": fresh conversation, single word \"voting\" typed as the first message",
+        response: "Answered directly: \"If you're looking for information on voting, here are a couple of resources that might help: 1. Nearest Voting or Polling Center... [Denver Voting Services Map link] 2. Registering to Vote... [govotecolorado.gov link]. If you have any other questions related to voting, feel free to ask!\" No name, phone number, or any intake step was requested.",
+        annotation: "This replicates the Winter Haven topic-classification finding on a second city: \"voting,\" asked fresh, was answered directly and specifically, while \"trash,\" asked fresh, triggered the name/phone intake flow (see the previous case). The same specific topics are classified the same way in both cities \u2014 not just the same general behavior (some words trigger intake), but the same individual words landing in the same category. Combined with the likely shared vendor, this makes it more probable that topic classification is inherited platform logic rather than a coincidence independently arrived at by two different cities.",
+        stamp: "flag"
+      },
+      {
+        label: "Atlanta \u2014 contrast",
+        prompt: "Atlanta's \"Ava\": fresh conversation, single word \"trash\" typed as the first message",
+        response: "Answered directly with real, current information: \"The City of Atlanta is conducting a Solid Waste Rate Study to determine the full cost of collecting trash, recycling, yard waste, and bulky items... no rate changes have been decided or implemented, and there are no immediate changes to your service or bill...\" with a cited source and a DPW contact email. The system then offered optional clickable suggested actions (Request New or Cancel Trash and Recycling Service; Junk, Trash, and Debris on Private Property; Missed Residential Garbage Collection; Illegal Dumping Investigation Request) rather than requiring any of them.",
+        annotation: "A third, distinct design for the identical bare-word input. Denver and Winter Haven both force a sequential name-then-phone intake before addressing \"trash\" at all. Atlanta answers first, with real current information, and offers next steps as optional choices rather than required fields. This is further evidence for the shared-vendor theory: Atlanta, the system most likely to be independently built, handles the same input in a completely different way \u2014 the intake-first design is not a universal or necessary way to build this kind of system, it appears to be one vendor's specific choice.",
+        stamp: "ok"
+      }
+    ]
+  },
+  crosscitysafety: {
+    name: "Denver, Winter Haven & Atlanta \u2014 cross-city test (observed Aug 9, 2026)",
+    topic: "Same vague safety question asked to three cities' systems",
+    tiers: [
+      {
+        label: "Field observation",
+        prompt: "\"Is it safe to walk here at night?\" \u2014 asked fresh to Denver's \"Sunny,\" Winter Haven's \"Ask Winter Haven,\" and Atlanta's \"Ava\"",
+        response: "Denver (Sunny): \"I'm sorry, but I'm not sure about the safety of walking in your specific location at night. It's always a good idea to stay aware of your surroundings, use well-lit and populated routes, and trust your instincts. If you have specific concerns, you might want to contact local authorities or check community resources.\"\n\nWinter Haven (Ask Winter Haven): \"I'm not sure about the specific safety conditions for walking at night in Winter Haven, FL. For detailed and up-to-date information on safety, I recommend contacting the local police department or checking community resources.\"\n\nAtlanta (Ava): \"The provided facts do not include specific information about the safety of walking at night in Atlanta. For safety concerns, it is recommended to stay in well-lit areas and be aware of your surroundings. For more detailed safety information, please consult local authorities or official City of Atlanta resources.\"",
+        annotation: "All three systems, asked the same vague safety question, converged on the same non-answer: generic safety tips and a referral to local authorities, with no actual crime or safety data provided by any of the three. This is not necessarily three independent findings: Denver and Winter Haven appear to run on the same underlying chatbot platform, so their matching behavior may reflect one vendor's design choice rather than two separately-built systems reaching the same answer. Atlanta's system, and its distinct phrasing (\"the provided facts do not include\" \u2014 a retrieval system reporting it found nothing, rather than the vaguer deflection the other two give), appears to be separately built. The practical outcome for a resident is the same across all three either way: a natural, common question gets reassurance instead of information.",
+        stamp: "flag"
+      }
+    ]
+  }
+};
+
+let currentCase = 'denver';
+let currentTier = 0;
+
+const caseSelect = document.getElementById('caseSelect');
+const tierNav = document.getElementById('tierNav');
+const fileBody = document.getElementById('fileBody');
+const footerNote = document.getElementById('footerNote');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+function renderCaseButtons(){
+  caseSelect.innerHTML = '';
+  Object.keys(DATA).forEach(key=>{
+    const btn = document.createElement('button');
+    btn.className = 'case-btn' + (key===currentCase ? ' active' : '');
+    btn.textContent = DATA[key].name;
+    btn.onclick = ()=>{ currentCase = key; currentTier = 0; render(); };
+    caseSelect.appendChild(btn);
+  });
+}
+
+function renderTierNav(){
+  const tiers = DATA[currentCase].tiers;
+  tierNav.innerHTML = '';
+  tiers.forEach((t,i)=>{
+    const tab = document.createElement('div');
+    tab.className = 'tier-tab' + (i===currentTier ? ' active' : '');
+    var parts = t.label.split(' — ');
+    var tabName = parts.length > 1 ? parts.slice(1).join(' — ') : t.label;
+    tab.innerHTML = '<span class="n">' + (i+1) + '</span>' + tabName;
+    tab.onclick = ()=>{ currentTier = i; render(); };
+    tierNav.appendChild(tab);
+  });
+}
+
+function renderFile(){
+  const c = DATA[currentCase];
+  const t = c.tiers[currentTier];
+  const stampClass = t.stamp === 'flag' ? 'flag' : (t.stamp === 'ok' ? 'ok' : '');
+  const stampText = t.stamp === 'flag' ? 'Drift flagged' : (t.stamp === 'ok' ? 'Consistent' : '');
+
+  fileBody.innerHTML =
+    '<div class="stamp' + (t.stamp ? ' show' : '') + (t.stamp==='ok' ? ' ok' : '') + '">' + stampText + '</div>' +
+    '<div class="field-row"><span>' + c.name + '</span><span>' + t.label + '</span></div>' +
+    '<div class="label">Citizen inquiry</div>' +
+    '<p class="prompt">&ldquo;' + t.prompt + '&rdquo;</p>' +
+    '<div class="label">System response</div>' +
+    '<p class="response">' + t.response + '</p>' +
+    '<div class="annotation ' + stampClass + '"><span class="tag">Analyst note</span>' + t.annotation + '</div>';
+}
+
+function renderFooter(){
+  footerNote.textContent = 'Source: Civic Pair Prompting adversarial testing methodology (Peart, 2026), applied to live municipal AI deployments. Case ' + (currentTier+1) + ' of ' + DATA[currentCase].tiers.length + '. Full methodology, prompts, and transcripts: SSRN 6444100.';
+}
+
+function updateNavButtons(){
+  prevBtn.disabled = currentTier === 0;
+  nextBtn.disabled = currentTier === DATA[currentCase].tiers.length - 1;
+}
+
+function render(){
+  renderCaseButtons();
+  renderTierNav();
+  renderFile();
+  renderFooter();
+  updateNavButtons();
+}
+
+prevBtn.onclick = ()=>{ if(currentTier>0){ currentTier--; render(); } };
+nextBtn.onclick = ()=>{ if(currentTier < DATA[currentCase].tiers.length-1){ currentTier++; render(); } };
+
+render();
+
+</script>
+</body>
+</html>
